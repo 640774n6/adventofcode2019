@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         //Calculate fuel for fuel
         while(massFuel > 0)
         {
-            //Calculate fuel and only add if greater than zero
+            //Calculate fuel and add it to total
             massFuel = calculate_fuel(massFuel);
             totalPart2 += massFuel;
         }
