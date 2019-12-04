@@ -1,6 +1,6 @@
 //
-//  day01.c
-//  day01
+//  day02.c
+//  day02
 //
 //  Created by Brandon Holland on 2019-12-01.
 //  Copyright © 2019 Brandon Holland. All rights reserved.
