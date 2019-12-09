@@ -11,9 +11,6 @@
 #include <string.h>
 #include <math.h>
 
-#define YOU_ID 857989
-#define SAN_ID 786583
-
 typedef struct satellite satellite;
 struct satellite
 {
@@ -107,12 +104,14 @@ int main(int argc, char *argv[])
     printf("part1: %d orbits\n", orbits);
 
     //Count distance from YOU to SAN
-    satellite *you = lookup[YOU_ID];
+    int you_id = generate_id("YOU");
+    int san_id = generate_id("SAN");
+    satellite *you = lookup[you_id];
     int you_jumps = 0;
     int jumps = 0;
     while(you->body != NULL)
     {
-        satellite *san = lookup[SAN_ID];
+        satellite *san = lookup[san_id];
         int san_jumps = 0;
         while(san->body != NULL)
         {
@@ -126,7 +125,7 @@ int main(int argc, char *argv[])
             san_jumps++;
         }
 
-        //Jump patch found
+        //Jump match found
         if (jumps > 0)
         { break; }
 
