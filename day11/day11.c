@@ -1,6 +1,6 @@
 //
-//  day09.c
-//  day09
+//  day11.c
+//  day11
 //
 //  Created by Brandon Holland on 2019-12-01.
 //  Copyright © 2019 Brandon Holland. All rights reserved.
@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 typedef enum status status;
 enum status
@@ -247,6 +246,7 @@ int64_t execute_state(state *state, int64_t state_in)
             }
             default:
                 //Error
+                printf("error: unknown opcode %lld\n", instruction.op);
                 state->s = status_error;
                 return instruction.op;
                 break;
@@ -280,16 +280,73 @@ void free_state(state *state)
     free(state);
 }
 
+typedef struct bot bot;
+struct bot
+{
+    int x;
+    int y;
+    int b;
+};
+
+void bot_turn(bot *bot, int turn)
+{
+    bot->b += turn == 0 ? -90 : 90;
+    if (bot->b < 0)
+    { bot->b += 360; }
+    else if (bot->b >= 360)
+    { bot->b -= 360; }
+}
+
+void bot_move(bot *bot, int delta)
+{
+    switch(bot->b)
+    {
+        case 0:
+            bot->y -= delta;
+            break;
+        case 90:
+            bot->x += delta;
+            break;
+        case 180:
+            bot->y += delta;
+            break;
+        case 270:
+            bot->x -= delta;
+            break;
+        default:
+            break;
+    }
+}
+
+void bot_paint(bot *bot, int **map, int c)
+{ map[bot->y][bot->x] = c; }
+
+int bot_look(bot *bot, int **map)
+{ return map[bot->y][bot->x]; }
+
+void print_map(int **map, int w, int h)
+{
+    for(int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            char c = map[y][x] == 0 ? '.' : '#';
+            printf("%c", c);
+        }
+        printf("\n");
+    }
+}
+
 int main(int argc, char *argv[])
 {
     //Argument check
     if (argc < 2)
     {
-        printf("usage: day09 <INPUT>\n");
+        printf("usage: day11 <INPUT>\n");
         exit(0);
     }
 
-    //Initialize variables
+    //Initialize codes
     int64_t *codes = malloc(sizeof(int64_t));
     int codesCount = 0;
     
@@ -305,37 +362,85 @@ int main(int argc, char *argv[])
     }
     fclose(file);
 
+    //Initialize map
+    int width = 100;
+    int height = 100;
+    int **map = malloc(sizeof(int *) * height);
+    for(int i = 0; i < height; i++)
+    { 
+        map[i] = malloc(sizeof(int) * width); 
+        for(int j = 0; j < width; j++)
+        { map[i][j] = -1; }
+    }
+
+    //Initialize bot
+    bot *bot = malloc(sizeof(bot));
+    bot->x = (width / 2) - 1;
+    bot->y = (height / 2) - 1;
+    bot->b = 0;
+
     //Initialize state
     state *state = alloc_state(1000);
 
-    //Load state and execute part 1
-    int64_t part1Result = 0;
+    //Load state and run bot to find number of panels visited
+    int count = 0;
     load_state(state, codes, codesCount);
     do
     {
-        int64_t result = execute_state(state, 1);
-        if (state->s == status_output)
-        { part1Result = result; }
-    }
-    while(state->s == status_output);
-    printf("part1: boost keycode = %lld\n", part1Result);
+        int sc = bot_look(bot, map);
+        if (sc == -1)
+        { 
+            sc = 0;
+            count++; 
+        }
 
-    //Load state and execute part 2
-    int64_t part2Result = 0;
+        int pc = (int)execute_state(state, sc);
+        bot_paint(bot, map, pc);
+
+        int t = (int)execute_state(state, 0);
+        bot_turn(bot, t);
+        bot_move(bot, 1);
+    }
+    while(state->s != status_halt && state->s != status_error);
+    printf("part1: panel visit count = %d\n", count);
+
+    //Reset bot
+    bot->x = (width / 2) - 1;
+    bot->y = (height / 2) - 1;
+    bot->b = 0;
+
+    //Reset map
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        { map[i][j] = 0; }
+    }
+
+    //Paint starting panel white
+    bot_paint(bot, map, 1);
+
+    //Load state and run bot to paint image
     load_state(state, codes, codesCount);
     do
     {
-        int64_t result = execute_state(state, 2);
-        if (state->s == status_output)
-        { part2Result = result; }
+        int sc = bot_look(bot, map);
+        int pc = (int)execute_state(state, sc);
+        bot_paint(bot, map, pc);
+
+        int t = (int)execute_state(state, 0);
+        bot_turn(bot, t);
+        bot_move(bot, 1);
     }
-    while(state->s == status_output);
-    printf("part2: distress signal coordinates = %lld\n", part2Result);
+    while(state->s != status_halt && state->s != status_error);
+    printf("part2:\n");
+    print_map(map, width, height);    
 
     //Cleanup
+    for(int i = 0; i < width; i++)
+    { free(map[i]); }
+    free(map);
+    free(bot);
     free_state(state);
     free(codes);
     return 0;
 }
-
-
