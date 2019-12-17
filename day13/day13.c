@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
     state *s = alloc_state(3000);
 
     //Load state and start game to find number of block tiles
-    int count = 0;
+    int blockCount = 0;
     load_state(s, codes, codesCount);
     do
     {
@@ -363,10 +363,9 @@ int main(int argc, char *argv[])
         int y = (int)execute_state(s, 0);
         tile t = (tile)execute_state(s, 0);
         if (t == tile_block)
-        { count++; }
+        { blockCount++; }
     }
     while(s->s != status_halt && s->s != status_error);
-    printf("part1: number of block tiles = %d\n", count);
 
     //Initialize tiles
     int width = 44;
@@ -396,9 +395,6 @@ int main(int argc, char *argv[])
         tiles[y][x] = (tile)execute_state(s, 0);
         render_tiles(tiles, width, height);
     }
-
-    //Wait for keypress before playing 
-    getch();
 
     //Start main game loop
     int score = 0;
@@ -439,6 +435,7 @@ int main(int argc, char *argv[])
     }
     while(s->s != status_halt && s->s != status_error);
     clear();
+    printw("part1: number of block tiles: %d\n", blockCount);
     printw("part2: final score: %d\n", score);
     refresh();
 
